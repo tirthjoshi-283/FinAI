@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #fff; font-family: Arial, sans-serif; }
+</style>
+</head>
+<body>
+<svg width="1060" height="740" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1060" height="740" fill="#fff"/>
+
+  <!-- Title -->
+  <text x="530" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#000">FinAI – Use Case Diagram</text>
+
+  <!-- System Boundary -->
+  <rect x="170" y="48" width="700" height="666" rx="4" fill="#fff" stroke="#000" stroke-width="1.8"/>
+  <text x="520" y="66" text-anchor="middle" font-size="12" font-weight="bold" fill="#000">FinAI System</text>
+
+  <!-- ========== ACTORS (left) ========== -->
+  <!-- Guest User -->
+  <circle cx="62" cy="168" r="16" fill="none" stroke="#000" stroke-width="1.8"/>
+  <line x1="62" y1="184" x2="62" y2="228" stroke="#000" stroke-width="1.8"/>
+  <line x1="36" y1="206" x2="88" y2="206" stroke="#000" stroke-width="1.8"/>
+  <line x1="62" y1="228" x2="40" y2="256" stroke="#000" stroke-width="1.8"/>
+  <line x1="62" y1="228" x2="84" y2="256" stroke="#000" stroke-width="1.8"/>
+  <text x="62" y="274" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">Guest User</text>
+
+  <!-- Registered User -->
+  <circle cx="62" cy="400" r="16" fill="none" stroke="#000" stroke-width="1.8"/>
+  <line x1="62" y1="416" x2="62" y2="460" stroke="#000" stroke-width="1.8"/>
+  <line x1="36" y1="438" x2="88" y2="438" stroke="#000" stroke-width="1.8"/>
+  <line x1="62" y1="460" x2="40" y2="488" stroke="#000" stroke-width="1.8"/>
+  <line x1="62" y1="460" x2="84" y2="488" stroke="#000" stroke-width="1.8"/>
+  <text x="62" y="505" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">Registered</text>
+  <text x="62" y="519" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">User</text>
+
+  <!-- Admin -->
+  <circle cx="62" cy="618" r="16" fill="none" stroke="#000" stroke-width="1.8"/>
+  <line x1="62" y1="634" x2="62" y2="668" stroke="#000" stroke-width="1.8"/>
+  <line x1="36" y1="650" x2="88" y2="650" stroke="#000" stroke-width="1.8"/>
+  <line x1="62" y1="668" x2="40" y2="692" stroke="#000" stroke-width="1.8"/>
+  <line x1="62" y1="668" x2="84" y2="692" stroke="#000" stroke-width="1.8"/>
+  <text x="62" y="710" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">Admin</text>
+
+  <!-- ========== ACTORS (right - external) ========== -->
+  <!-- Firebase Auth -->
+  <rect x="900" y="90" width="140" height="40" rx="3" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="970" y="107" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">Firebase Auth</text>
+  <text x="970" y="122" text-anchor="middle" font-size="9.5" fill="#555">«external»</text>
+
+  <!-- Gemini AI -->
+  <rect x="900" y="360" width="140" height="40" rx="3" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="970" y="377" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">Gemini AI</text>
+  <text x="970" y="392" text-anchor="middle" font-size="9.5" fill="#555">«external»</text>
+
+  <!-- GNews API -->
+  <rect x="900" y="560" width="140" height="40" rx="3" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <text x="970" y="577" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">GNews API</text>
+  <text x="970" y="592" text-anchor="middle" font-size="9.5" fill="#555">«external»</text>
+
+  <!-- ========== GROUP: Authentication ========== -->
+  <rect x="185" y="75" width="205" height="160" rx="3" fill="#fff" stroke="#888" stroke-width="1" stroke-dasharray="6,3"/>
+  <text x="287" y="92" text-anchor="middle" font-size="10.5" fill="#555">Authentication</text>
+  <ellipse cx="287" cy="120" rx="82" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="287" y="124" text-anchor="middle" font-size="11" fill="#000">Login / Register</text>
+  <ellipse cx="287" cy="165" rx="82" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="287" y="169" text-anchor="middle" font-size="11" fill="#000">Google OAuth</text>
+  <ellipse cx="287" cy="210" rx="82" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="287" y="214" text-anchor="middle" font-size="11" fill="#000">Reset Password</text>
+
+  <!-- ========== GROUP: Dashboard & Transactions ========== -->
+  <rect x="185" y="258" width="205" height="210" rx="3" fill="#fff" stroke="#888" stroke-width="1" stroke-dasharray="6,3"/>
+  <text x="287" y="275" text-anchor="middle" font-size="10.5" fill="#555">Dashboard &amp; Transactions</text>
+  <ellipse cx="287" cy="302" rx="82" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="287" y="306" text-anchor="middle" font-size="11" fill="#000">View Dashboard</text>
+  <ellipse cx="287" cy="347" rx="82" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="287" y="351" text-anchor="middle" font-size="11" fill="#000">Add / Delete Transaction</text>
+  <ellipse cx="287" cy="392" rx="82" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="287" y="396" text-anchor="middle" font-size="11" fill="#000">Filter Transactions</text>
+  <ellipse cx="287" cy="437" rx="82" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="287" y="441" text-anchor="middle" font-size="11" fill="#000">Export as PDF</text>
+
+  <!-- ========== GROUP: Financial Goals ========== -->
+  <rect x="185" y="490" width="205" height="200" rx="3" fill="#fff" stroke="#888" stroke-width="1" stroke-dasharray="6,3"/>
+  <text x="287" y="507" text-anchor="middle" font-size="10.5" fill="#555">Financial Goals</text>
+  <ellipse cx="287" cy="534" rx="82" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="287" y="538" text-anchor="middle" font-size="11" fill="#000">Create Goal</text>
+  <ellipse cx="287" cy="579" rx="82" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="287" y="583" text-anchor="middle" font-size="11" fill="#000">Add Funds to Goal</text>
+  <ellipse cx="287" cy="624" rx="82" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="287" y="628" text-anchor="middle" font-size="11" fill="#000">Track Goal Progress</text>
+  <ellipse cx="287" cy="669" rx="82" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="287" y="673" text-anchor="middle" font-size="11" fill="#000">Delete Goal</text>
+
+  <!-- ========== GROUP: AI Features ========== -->
+  <rect x="415" y="75" width="215" height="160" rx="3" fill="#fff" stroke="#888" stroke-width="1" stroke-dasharray="6,3"/>
+  <text x="522" y="92" text-anchor="middle" font-size="10.5" fill="#555">AI Features</text>
+  <ellipse cx="522" cy="120" rx="88" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="522" y="124" text-anchor="middle" font-size="11" fill="#000">Get AI Insights</text>
+  <ellipse cx="522" cy="165" rx="88" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="522" y="169" text-anchor="middle" font-size="11" fill="#000">View Health Score</text>
+  <ellipse cx="522" cy="210" rx="88" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="522" y="214" text-anchor="middle" font-size="11" fill="#000">Chat with FinAI Bot</text>
+
+  <!-- ========== GROUP: News & Analytics ========== -->
+  <rect x="415" y="258" width="215" height="160" rx="3" fill="#fff" stroke="#888" stroke-width="1" stroke-dasharray="6,3"/>
+  <text x="522" y="275" text-anchor="middle" font-size="10.5" fill="#555">News &amp; Analytics</text>
+  <ellipse cx="522" cy="302" rx="88" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="522" y="306" text-anchor="middle" font-size="11" fill="#000">View Analytics Charts</text>
+  <ellipse cx="522" cy="347" rx="88" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="522" y="351" text-anchor="middle" font-size="11" fill="#000">View Finance News</text>
+  <ellipse cx="522" cy="392" rx="88" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="522" y="396" text-anchor="middle" font-size="11" fill="#000">Search News</text>
+
+  <!-- ========== GROUP: Admin Panel ========== -->
+  <rect x="415" y="440" width="215" height="254" rx="3" fill="#fff" stroke="#888" stroke-width="1" stroke-dasharray="6,3"/>
+  <text x="522" y="457" text-anchor="middle" font-size="10.5" fill="#555">Admin Panel</text>
+  <ellipse cx="522" cy="485" rx="88" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="522" y="489" text-anchor="middle" font-size="11" fill="#000">Manage Users &amp; Roles</text>
+  <ellipse cx="522" cy="532" rx="88" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="522" y="536" text-anchor="middle" font-size="11" fill="#000">View All Transactions</text>
+  <ellipse cx="522" cy="579" rx="88" ry="18" fill="#fff" stroke="#000" stroke-width="1.4"/>
+  <text x="522" y="583" text-anchor="middle" font-size="11" fill="#000">View Login History</text>
+
+  <!-- ========== CONNECTIONS ========== -->
+  <!-- Guest → Auth -->
+  <line x1="78" y1="168" x2="200" y2="120" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="168" x2="200" y2="165" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="168" x2="200" y2="210" stroke="#000" stroke-width="1.1"/>
+
+  <!-- Registered → Dashboard & Goals -->
+  <line x1="78" y1="400" x2="200" y2="302" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="400" x2="200" y2="347" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="400" x2="200" y2="392" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="400" x2="200" y2="437" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="400" x2="200" y2="534" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="400" x2="200" y2="579" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="400" x2="200" y2="624" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="400" x2="200" y2="669" stroke="#000" stroke-width="1.1"/>
+  <!-- Registered → AI & News -->
+  <line x1="78" y1="400" x2="428" y2="120" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="400" x2="428" y2="165" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="400" x2="428" y2="210" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="400" x2="428" y2="302" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="400" x2="428" y2="347" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="400" x2="428" y2="392" stroke="#000" stroke-width="1.1"/>
+
+  <!-- Admin → Admin Panel -->
+  <line x1="78" y1="618" x2="428" y2="485" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="618" x2="428" y2="532" stroke="#000" stroke-width="1.1"/>
+  <line x1="78" y1="618" x2="428" y2="579" stroke="#000" stroke-width="1.1"/>
+
+  <!-- Auth use cases → Firebase (dashed) -->
+  <line x1="369" y1="120" x2="900" y2="110" stroke="#555" stroke-width="1.1" stroke-dasharray="5,3"/>
+  <line x1="369" y1="165" x2="900" y2="110" stroke="#555" stroke-width="1.1" stroke-dasharray="5,3"/>
+  <text x="660" y="110" text-anchor="middle" font-size="9.5" fill="#555">«include»</text>
+
+  <!-- AI use cases → Gemini -->
+  <line x1="610" y1="120" x2="900" y2="380" stroke="#555" stroke-width="1.1" stroke-dasharray="5,3"/>
+  <line x1="610" y1="210" x2="900" y2="380" stroke="#555" stroke-width="1.1" stroke-dasharray="5,3"/>
+  <text x="782" y="298" text-anchor="middle" font-size="9.5" fill="#555">«include»</text>
+
+  <!-- News use cases → GNews -->
+  <line x1="610" y1="347" x2="900" y2="580" stroke="#555" stroke-width="1.1" stroke-dasharray="5,3"/>
+  <line x1="610" y1="392" x2="900" y2="580" stroke="#555" stroke-width="1.1" stroke-dasharray="5,3"/>
+  <text x="782" y="500" text-anchor="middle" font-size="9.5" fill="#555">«include»</text>
+
+  <!-- Footer -->
+  <text x="530" y="728" text-anchor="middle" font-size="10" fill="#aaa">FinAI Project — Use Case Diagram</text>
+</svg>
+</body>
+</html>

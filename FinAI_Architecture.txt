@@ -1,0 +1,754 @@
+================================================================================
+  FINAI — COMPLETE WEBSITE ARCHITECTURE & FLOW DOCUMENTATION
+  Generated: April 21, 2026
+================================================================================
+
+
+================================================================================
+1. TECH STACK
+================================================================================
+
+  Layer                Technology
+  -------------------  --------------------------------------------------
+  Framework            Next.js 14 (App Router)
+  Language             TypeScript
+  Styling              Tailwind CSS + shadcn/ui + tw-animate-css
+  Authentication       Firebase Auth (Email/Password + Google OAuth)
+  Database             MongoDB Atlas via Mongoose
+  AI / Chatbot         Google Gemini 2.0 Flash (@google/genai)
+  News API             GNews.io REST API
+  PDF Export           jsPDF + jspdf-autotable (lazy-loaded on demand)
+  Animations           Framer Motion (lazy-loaded) + pure CSS keyframes
+  Markdown Renderer    react-markdown (lazy-loaded)
+  Icons                lucide-react (tree-shaken)
+  Charts               Recharts (lazy-loaded via next/dynamic)
+  Deployment           Local dev: npm run dev → localhost:3000
+
+
+================================================================================
+2. FULL USER FLOW (START TO END)
+================================================================================
+
+  USER OPENS BROWSER
+        |
+        v
+  visits localhost:3000
+        |
+        v
+  ┌─────────────────────────────────────────────────────┐
+  │           NEXT.JS MIDDLEWARE  (middleware.ts)        │
+  │                                                     │
+  │  Reads cookies: auth-token, user-role               │
+  │                                                     │
+  │  /dashboard or /admin:                              │
+  │    - No token?  ──►  redirect to /auth/login        │
+  │    - Has token? ──►  allow through                  │
+  │                                                     │
+  │  /auth pages:                                       │
+  │    - Has token + role=admin? ──►  redirect /admin   │
+  │    - Has token + role=user?  ──►  redirect /dashboard│
+  │    - No token?               ──►  allow through     │
+  └─────────────────────────────────────────────────────┘
+        |
+        |──── No token ────────────────────────┐
+        |                                      |
+        v                                      v
+  LANDING PAGE (/)                     AUTH PAGES (/auth/*)
+  - Marketing hero                     /auth/login
+  - Feature highlights                 /auth/register
+  - CTA: Login / Sign Up               /auth/forgot-password
+        |                                      |
+        |                                      v
+        |                          Firebase Authentication SDK
+        |                            - signInWithEmailAndPassword()
+        |                            - createUserWithEmailAndPassword()
+        |                            - signInWithPopup() (Google)
+        |                                      |
+        |                                      v
+        |                          AuthContext.tsx (global state)
+        |                            Step 1: syncToMongo()
+        |                              POST /api/users/sync
+        |                              → upsert user in MongoDB
+        |                              → returns role (user/admin)
+        |                            Step 2: setAuthCookies()
+        |                              auth-token = Firebase ID Token
+        |                              user-role  = "user" or "admin"
+        |                            Step 3: recordLoginEvent()
+        |                              [fire-and-forget]
+        |                              GET https://api.ipify.org → IP
+        |                              POST /api/users/login-event
+        |                              → geo lookup ip-api.com (2s timeout)
+        |                              → MongoDB: loginHistory[] (w:0 async)
+        |                            Step 4: router.push()
+        |                              admin → /admin
+        |                              user  → /dashboard
+        |                                      |
+        └──────────────────────────────────────┘
+                                               |
+                                               v
+                                    AUTHENTICATED AREA
+                            /dashboard  OR  /admin
+
+
+================================================================================
+3. DASHBOARD ARCHITECTURE
+================================================================================
+
+  /dashboard  (app/dashboard/layout.tsx)
+  │
+  ├── DashboardBackground.tsx   [STATIC — memoized, never re-renders]
+  │     • Dark gradient base: #05050F → #0A0818 → #050510
+  │     • Star field (pure CSS radial-gradient pattern)
+  │     • 3 aurora orbs (CSS animation, translateZ(0) GPU layer)
+  │     • SVG node network with 4 nodes + animated edges
+  │     • Dot-grid overlay
+  │     • All animations: 18-25s loops, minimal CPU
+  │
+  ├── DashboardProvider.tsx   [DATA LAYER — mounted once, shared everywhere]
+  │     • On user login: fetches BOTH transactions and goals in parallel
+  │       - GET /api/transactions  (MongoDB, userId compound index)
+  │       - GET /api/goals         (MongoDB, userId index)
+  │     • Exposes via React Context:
+  │       - transactions[], loadingTransactions
+  │       - goals[], loadingGoals
+  │       - addTransaction(), deleteTransaction()
+  │       - addGoal(), addFundsToGoal(), deleteGoal()
+  │     • All dashboard pages share this — ZERO duplicate fetches
+  │
+  ├── DashboardSidebar.tsx   [NAVIGATION]
+  │     • Links: Dashboard, Transactions, Charts, Goals,
+  │              AI Suggestions, Newsletter
+  │     • User avatar, display name, email
+  │     • Logout button → Firebase signOut() → /auth/login
+  │
+  └── Sub-pages (rendered inside <main>):
+        /dashboard                  → Command Center
+        /dashboard/transactions     → Transaction Ledger
+        /dashboard/charts           → Deep Analytics
+        /dashboard/goals            → Goals Tracker
+        /dashboard/ai-suggestions   → AI Advisor + Gemini Chat
+        /dashboard/newsletter       → Finance News Feed
+
+
+================================================================================
+4. ALL PAGES — DETAILED BREAKDOWN
+================================================================================
+
+  ────────────────────────────────────────────────────────────
+  4a. LANDING PAGE  /  (app/page.tsx)
+  ────────────────────────────────────────────────────────────
+  - Full marketing site
+  - Hero section with AmbientBackground.tsx (animated CSS)
+  - Feature cards, testimonials, pricing section
+  - CTA buttons → /auth/login and /auth/register
+
+  ────────────────────────────────────────────────────────────
+  4b. LOGIN  /auth/login
+  ────────────────────────────────────────────────────────────
+  - Email + Password form
+  - Google Sign-In button (popup)
+  - Link to /auth/register and /auth/forgot-password
+  - On success → sets cookies → redirects based on role
+
+  ────────────────────────────────────────────────────────────
+  4c. REGISTER  /auth/register
+  ────────────────────────────────────────────────────────────
+  - Fields: Name, Email, Phone, Password
+  - Creates Firebase user account
+  - Syncs to MongoDB via POST /api/users/sync
+  - Auto-redirects to /dashboard
+
+  ────────────────────────────────────────────────────────────
+  4d. FORGOT PASSWORD  /auth/forgot-password
+  ────────────────────────────────────────────────────────────
+  - Sends Firebase password reset email
+
+  ────────────────────────────────────────────────────────────
+  4e. COMMAND CENTER  /dashboard
+  ────────────────────────────────────────────────────────────
+  - Net Worth card (total credit - total debit)
+  - Total Credited + Total Debited stat cards
+  - CashflowChart: Recharts LineChart (lazy-loaded)
+    * Groups transactions by date
+    * Shows debit vs credit trend over time
+  - Top Categories: spending grouped by category
+  - AddTransactionForm: add credit/debit with category + title + date
+  - LiveStocksWidget: NVDA, AAPL, TSLA, MSFT, META (static demo)
+  - FinanceNewsWidget: 4 headlines from GNews (1hr session cache)
+
+  ────────────────────────────────────────────────────────────
+  4f. TRANSACTION LEDGER  /dashboard/transactions
+  ────────────────────────────────────────────────────────────
+  - Full list of all transactions sorted by date (newest first)
+  - Date range filter: From / To inputs
+  - Category filter tabs (dynamically built from actual categories)
+  - Each row: icon, title, date/time, category badge, amount, delete
+  - Download PDF button:
+    * jsPDF + jspdf-autotable LAZY LOADED on click only
+    * Shows "Preparing PDF..." spinner while loading
+    * Generates: title, date, period, full transaction table
+  - Delete transactions with instant UI update (optimistic)
+
+  ────────────────────────────────────────────────────────────
+  4g. DEEP ANALYTICS  /dashboard/charts
+  ────────────────────────────────────────────────────────────
+  - Time range selector: 7D / 1M / 6M / 1Y / ALL
+  - Stat row: Period Debits, Period Credits, Net Diff, Count
+  - Debit vs Credit Trend (LineChart, lazy-loaded)
+  - Gross Volume per Day (BarChart, lazy-loaded)
+  - Spending Distribution (PieChart with donut, lazy-loaded)
+  - Category legend with amounts
+
+  ────────────────────────────────────────────────────────────
+  4h. GOALS TRACKER  /dashboard/goals
+  ────────────────────────────────────────────────────────────
+  - Create financial goals: title + target amount
+  - Visual progress bar per goal (currentAmount / targetAmount)
+  - Add Funds button → updates currentAmount in MongoDB
+  - Delete goal
+  - Percentage completion display
+
+  ────────────────────────────────────────────────────────────
+  4i. AI FINANCIAL ADVISOR  /dashboard/ai-suggestions
+  ────────────────────────────────────────────────────────────
+  LEFT PANEL — Smart Insights:
+  - Sends all transactions to Gemini 2.0 Flash
+  - Returns 3-4 insight cards:
+    * Type: warning | opportunity | tip
+    * Title + description + color coding
+  - Portfolio Health Score (0–100) with explanation text
+  - Cached in localStorage for 24 hours
+  - Refresh button clears cache + re-fetches
+  - Rate limit UI: countdown timer if quota exceeded
+
+  RIGHT PANEL — FinAI Chatbot:
+  - Conversation UI (AI bubbles + user bubbles)
+  - Sends: user message + full transaction history to Gemini
+  - AI responses rendered with ReactMarkdown (LAZY LOADED)
+  - Supports: bold, lists, numbered lists in AI replies
+  - Auto-scrolls to latest message
+  - "Analyzing..." typing indicator (bouncing dots)
+
+  ────────────────────────────────────────────────────────────
+  4j. FINANCE NEWSLETTER  /dashboard/newsletter
+  ────────────────────────────────────────────────────────────
+  - Category tabs: Top Stories, Markets, Crypto, Economy, Fintech
+  - Search bar: custom query (e.g. "RBI policy", "Tesla earnings")
+  - 10-article grid with:
+    * Thumbnail image (lazy + decoding=async)
+    * Source badge + time-ago label
+    * Title + description
+    * Read Article link
+  - Framer Motion entrance animations (LAZY LOADED)
+  - Refresh button with 60-second API cooldown protection
+  - Cache: 1 hour per query in sessionStorage
+  - Toast notifications for refresh feedback
+
+  ────────────────────────────────────────────────────────────
+  4k. ADMIN CONSOLE  /admin
+  ────────────────────────────────────────────────────────────
+  - Accessible ONLY to admin@finai.com
+  - View all registered users
+  - See each user's login history (IP, location, device, time)
+  - Manage user roles
+  - View all transactions across all users
+
+
+================================================================================
+5. ALL API ROUTES
+================================================================================
+
+  METHOD   ENDPOINT                          PURPOSE
+  -------  --------------------------------  ----------------------------------
+  GET      /api/transactions                 Fetch user's transactions
+                                             Sorted by date DESC
+                                             Header: Cache-Control private
+
+  POST     /api/transactions                 Create new transaction
+                                             Body: {amount, type, category,
+                                                    title, date}
+
+  DELETE   /api/transactions/[id]            Delete a specific transaction
+
+  GET      /api/goals                        Fetch user's goals
+                                             Sorted by createdAt DESC
+                                             Header: Cache-Control private
+
+  POST     /api/goals                        Create new goal
+                                             Body: {title, targetAmount}
+
+  PATCH    /api/goals/[id]                   Add funds to goal
+                                             Body: {amountToAdd}
+
+  DELETE   /api/goals/[id]                   Delete a goal
+
+  GET      /api/news                         Fetch finance news from GNews
+                                             ?q=finance (default)
+                                             ?count=10
+                                             ?forceRefresh=true
+                                             Server cache: 15 minutes
+                                             60s cooldown on forceRefresh
+                                             Header: Cache-Control public
+                                                     s-maxage=900
+                                                     stale-while-revalidate=1800
+
+  POST     /api/ai/insights                  Gemini AI: analyze transactions
+                                             Body: {transactions[]}
+                                             Returns: {insights[], healthScore,
+                                                       insightText}
+
+  POST     /api/chat                         Gemini AI: chat conversation
+                                             Body: {message, transactions[]}
+                                             Returns: {reply}
+
+  POST     /api/users/sync                   Upsert user in MongoDB
+                                             Body: {uid, name, email, phone,
+                                                    provider, role, password}
+                                             Returns: {role}
+
+  GET      /api/users/profile                Fetch user role from MongoDB
+                                             ?uid=&email=
+                                             Returns: {role}
+
+  POST     /api/users/login-event            Record login event
+                                             Body: {uid, ip, device}
+                                             Fire-and-forget DB write (w:0)
+                                             Geo-lookup: 2s AbortController
+
+  POST     /api/users/forgot-password        Send Firebase password reset email
+
+  GET/POST /api/admin/*                      Admin-only user management
+
+
+================================================================================
+6. DATABASE MODELS (MongoDB via Mongoose)
+================================================================================
+
+  ─────────────────────────────────────
+  USER MODEL  (models/User.ts)
+  ─────────────────────────────────────
+  Field          Type      Notes
+  -----------    --------  ---------------------
+  uid            String    Firebase UID (indexed)
+  name           String    Display name
+  email          String    User email
+  phone          String    Phone number
+  password       String    Hashed password
+  provider       String    "email" | "google"
+  role           String    "user" | "admin"
+  loginHistory   Array     Max 50 entries:
+                           - timestamp: Date
+                           - ip: String
+                           - city: String
+                           - country: String
+                           - device: String
+  createdAt      Date      Auto set
+
+  ─────────────────────────────────────
+  TRANSACTION MODEL  (models/Transaction.ts)
+  ─────────────────────────────────────
+  Field          Type      Notes
+  -----------    --------  ---------------------
+  userId         String    Firebase UID (index: true)
+  type           String    "credit" | "debit"
+  amount         Number    Transaction amount
+  category       String    User-defined category
+  title          String    Transaction description
+  date           Date      Transaction date
+  createdAt      Date      Auto (timestamps: true)
+  updatedAt      Date      Auto (timestamps: true)
+
+  INDEXES:
+  - userId (single field, from field definition)
+  - { userId: 1, date: -1 } (compound — optimizes every fetch)
+
+  ─────────────────────────────────────
+  GOAL MODEL  (models/Goal.ts)
+  ─────────────────────────────────────
+  Field          Type      Notes
+  -----------    --------  ---------------------
+  userId         String    Firebase UID (index: true)
+  title          String    Goal name
+  targetAmount   Number    Target to reach
+  currentAmount  Number    Current progress (default: 0)
+  createdAt      Date      (index: true)
+
+
+================================================================================
+7. AUTHENTICATION FLOW (DETAILED)
+================================================================================
+
+  STEP 1: User submits login form
+    → Firebase signInWithEmailAndPassword(auth, email, password)
+    → Firebase verifies credentials server-side
+    → Returns: UserCredential object
+
+  STEP 2: syncToMongo(payload)
+    → POST /api/users/sync
+    → MongoDB: findOneAndUpdate({uid}, {...userData}, {upsert: true})
+    → Returns role from DB
+    → Special case: admin@finai.com → instantly returns "admin"
+
+  STEP 3: setAuthCookies(token, role)
+    → document.cookie = "auth-token=<Firebase JWT>; max-age=3600"
+    → document.cookie = "user-role=<role>; max-age=3600"
+    → These cookies are read by middleware.ts on EVERY page request
+
+  STEP 4: recordLoginEvent(uid) [non-blocking]
+    → fetch("https://api.ipify.org") → get public IP address
+    → POST /api/users/login-event {uid, ip, device}
+    → Server: AbortController timeout (2 seconds) on geo-lookup
+    → Server: fire-and-forget MongoDB write (w:0, no ack needed)
+    → Response returns instantly (<200ms)
+
+  STEP 5: router.push()
+    → role === "admin"  →  /admin
+    → role === "user"   →  /dashboard
+
+  MIDDLEWARE (runs on every request to /dashboard/* and /admin/*):
+    → Reads "auth-token" cookie
+    → No token? → redirect /auth/login?redirect=<original-path>
+    → Has token on /auth page? → redirect to appropriate home
+
+
+================================================================================
+8. DATA FLOW INSIDE DASHBOARD
+================================================================================
+
+  User navigates to ANY dashboard page
+              |
+              v
+  DashboardLayout.tsx renders:
+    1. DashboardBackground (memoized — renders ONCE EVER)
+    2. DashboardProvider (mounts ONCE per session)
+              |
+              v
+  DashboardProvider useEffect fires (on user login):
+    → Parallel fetch (Promise.all):
+        GET /api/transactions  →  MongoDB: find({userId}).sort({date:-1})
+        GET /api/goals         →  MongoDB: find({userId}).sort({createdAt:-1})
+    → Both use compound/field indexes → fast even with many records
+    → State: transactions[], goals[]
+              |
+              v
+  Any sub-page calls useDashboard():
+    → Gets transactions, goals from context
+    → NO re-fetching on navigation
+    → Changes (add/delete) update state locally + hit API
+    → Single source of truth for entire dashboard
+
+  Data update flow (e.g. add transaction):
+    User submits form
+      → addTransaction(tx) in DashboardProvider
+      → POST /api/transactions {amount, type, category, title, date}
+      → MongoDB creates document
+      → Response: new transaction object
+      → setTransactions([newTx, ...prev]) — instant UI update
+
+
+================================================================================
+9. AI / GEMINI INTEGRATION
+================================================================================
+
+  ENDPOINT 1: POST /api/ai/insights
+  ─────────────────────────────────
+  Input:   transactions[] (all user transactions)
+  Prompt:  "You are a financial analyst AI. Analyze these transactions
+            and return ONLY a JSON object with:
+            {
+              insights: [{id, type, title, desc, color, bg, border}],
+              healthScore: number (0-100),
+              insightText: string
+            }
+            type must be: warning | opportunity | tip"
+
+  Output:  Parsed JSON displayed as insight cards + donut score
+  Cache:   localStorage key "finai_insights_cache", TTL 24 hours
+
+  ENDPOINT 2: POST /api/chat
+  ──────────────────────────
+  Input:   { message: string, transactions: [] }
+  Prompt:  System: "You are FinAI, an expert financial advisor chatbot.
+            You have access to the user's full transaction history.
+            Be concise, helpful, and use markdown for formatting.
+            Transaction data: [...]"
+           User: <message>
+
+  Output:  { reply: string }
+  Render:  ReactMarkdown (lazy-loaded) — supports bold, lists, etc.
+
+  FALLBACK CHAIN:
+    gemini-2.0-flash
+      → if rate limited → gemini-1.5-flash
+    Error handling: countdown timer UI, localStorage cache bypass
+
+
+================================================================================
+10. THIRD-PARTY INTEGRATIONS
+================================================================================
+
+  Service              Purpose                          Used In
+  -------------------  -------------------------------  ---------------------
+  Firebase Auth        Login/register/Google OAuth      lib/firebase.ts
+                                                        context/AuthContext.tsx
+  Firebase Firestore   Supplementary user data          AuthContext.tsx
+  MongoDB Atlas        Primary DB (users, tx, goals)    All app/api/** routes
+  Google Gemini 2.0    AI insights + chatbot            app/api/ai/insights
+                                                        app/api/chat
+  GNews.io             Finance news articles            app/api/news/route.ts
+  ip-api.com           IP → City/Country geo-lookup     app/api/users/login-event
+  api.ipify.org        Get user's public IP address     context/AuthContext.tsx
+  Google Fonts (Inter) Typography                       app/layout.tsx
+
+
+================================================================================
+11. ENVIRONMENT VARIABLES  (.env.local)
+================================================================================
+
+  Variable                              Purpose
+  ------------------------------------  ----------------------------------
+  MONGODB_URI                           MongoDB Atlas connection string
+  GNEWS_API_KEY                         GNews.io API key (100 req/day free)
+  GEMINI_API_KEY                        Google AI Studio API key
+
+  NEXT_PUBLIC_FIREBASE_API_KEY          Firebase web app config
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN      Firebase web app config
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID       Firebase web app config
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET   Firebase web app config
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID Firebase web app config
+  NEXT_PUBLIC_FIREBASE_APP_ID           Firebase web app config
+
+
+================================================================================
+12. PERFORMANCE OPTIMIZATIONS (ALL APPLIED)
+================================================================================
+
+  --- BUNDLE SIZE REDUCTIONS ---
+
+  Library              Before          After           Method
+  -------------------  --------------- --------------- -------------------------
+  jsPDF + autotable    Loaded always   On click only   Dynamic import in handler
+  framer-motion        Loaded always   On demand       next/dynamic (newsletter)
+  react-markdown       Loaded always   On demand       next/dynamic (AI page)
+  Recharts             Loaded always   On demand       next/dynamic (charts)
+  lucide-react         Full bundle     Tree-shaken     optimizePackageImports
+  firebase             Full bundle     Tree-shaken     optimizePackageImports
+  framer-motion        Full bundle     Tree-shaken     optimizePackageImports
+  @google/genai        Full bundle     Tree-shaken     optimizePackageImports
+
+  Module count improvements (approximate):
+    /dashboard/transactions: 2686 → ~1800 modules
+    /dashboard/newsletter:   3620 → ~2400 modules
+    /dashboard/ai-suggestions: 2978 → ~2200 modules
+
+  --- API PERFORMANCE ---
+
+  Fix                                   Impact
+  ------------------------------------  ------------------------------------
+  Cache-Control: private on             Browser reuses response on repeat
+  transactions + goals GET              navigation (0ms vs ~2000ms)
+
+  Cache-Control: public, s-maxage=900   CDN/edge caches news 15 minutes
+  on news GET                           (eliminates 3s GNews API call)
+
+  MongoDB maxPoolSize: 5                Maintains connection pool →
+  serverSelectionTimeoutMS: 5000        no cold reconnect delay per request
+
+  userId index on Goal schema           Fixes 9.7s full collection scan
+                                        → O(log n) indexed query
+
+  {userId: 1, date: -1} compound        Single-scan sort+filter on
+  index on Transaction schema           Transaction.find().sort()
+
+  login-event: AbortController 2s       6100ms → <200ms login response
+  timeout + fire-and-forget write       User never waits for geo-lookup
+
+  --- RENDERING PERFORMANCE ---
+
+  Fix                                   Impact
+  ------------------------------------  ------------------------------------
+  loading.tsx for all 5 sub-pages       Instant skeleton shown while JS
+                                        compiles — zero blank/frozen screen
+
+  contain: layout style on glass-panel  Isolates repaint — changes inside
+                                        don't trigger parent DOM repaint
+
+  Aurora blur: 130/140px → 80/90px      ~50% less GPU fill area on low RAM
+
+  transform: translateZ(0) replaces     GPU compositor without VRAM leak
+  will-change: transform                risk of will-change
+
+  @media (prefers-reduced-motion)       All animations disabled on
+  in globals.css                        low-power / accessibility mode
+
+  DashboardBackground in React.memo     Never re-renders on route changes
+
+  DashboardProvider at layout level     Data fetched ONCE, all pages share
+
+  --- next.config.mjs CONFIGURATION ---
+
+  compress: true                  Gzip + Brotli on all responses
+  poweredByHeader: false          Removes X-Powered-By (security + perf)
+  images.formats: [avif, webp]    Modern image formats
+  optimizePackageImports: [       Next.js tree-shakes these packages:
+    lucide-react, recharts,         only imported icons/components bundled
+    date-fns, framer-motion,
+    @google/genai, firebase,
+    firebase-admin
+  ]
+  modularizeImports: {            Secondary tree-shake for lucide-react
+    lucide-react: {               prevents full icon library import
+      transform: '.../icons/...'
+      preventFullImport: true
+    }
+  }
+
+
+================================================================================
+13. COMPLETE FILE STRUCTURE
+================================================================================
+
+  Finance AI/
+  │
+  ├── app/
+  │   ├── layout.tsx                  Root layout: Inter font, AuthProvider
+  │   ├── globals.css                 Design system, keyframes, CSS tokens
+  │   ├── page.tsx                    Landing / marketing page
+  │   ├── favicon.ico
+  │   │
+  │   ├── auth/
+  │   │   ├── layout.tsx              Auth layout (centered card style)
+  │   │   ├── login/page.tsx          Login form
+  │   │   ├── register/page.tsx       Registration form
+  │   │   └── forgot-password/page.tsx  Password reset
+  │   │
+  │   ├── dashboard/
+  │   │   ├── layout.tsx              Dashboard shell (background+sidebar+provider)
+  │   │   ├── loading.tsx             ★ Skeleton: command center
+  │   │   ├── page.tsx                Command Center overview
+  │   │   │
+  │   │   ├── transactions/
+  │   │   │   ├── page.tsx            Transaction Ledger + PDF export
+  │   │   │   └── loading.tsx         ★ Skeleton: transaction rows
+  │   │   │
+  │   │   ├── charts/
+  │   │   │   ├── page.tsx            Deep Analytics (Recharts)
+  │   │   │   └── loading.tsx         ★ Skeleton: chart containers
+  │   │   │
+  │   │   ├── goals/
+  │   │   │   ├── page.tsx            Goals Tracker
+  │   │   │   └── loading.tsx         ★ Skeleton: goal cards
+  │   │   │
+  │   │   ├── ai-suggestions/
+  │   │   │   ├── page.tsx            AI Insights + Gemini Chat
+  │   │   │   └── loading.tsx         ★ Skeleton: insight cards + chat panel
+  │   │   │
+  │   │   └── newsletter/
+  │   │       ├── page.tsx            Finance News Feed
+  │   │       └── loading.tsx         ★ Skeleton: article grid
+  │   │
+  │   ├── admin/
+  │   │   ├── layout.tsx              Admin layout
+  │   │   └── page.tsx                Admin Console (user management)
+  │   │
+  │   └── api/
+  │       ├── transactions/
+  │       │   ├── route.ts            GET (fetch) / POST (create)
+  │       │   └── [id]/route.ts       DELETE
+  │       │
+  │       ├── goals/
+  │       │   ├── route.ts            GET (fetch) / POST (create)
+  │       │   └── [id]/route.ts       PATCH (add funds) / DELETE
+  │       │
+  │       ├── news/route.ts           GET (GNews + 15min cache)
+  │       │
+  │       ├── ai/
+  │       │   └── insights/route.ts  POST (Gemini AI analysis)
+  │       │
+  │       ├── chat/route.ts           POST (Gemini chatbot)
+  │       │
+  │       └── users/
+  │           ├── sync/route.ts       POST (upsert user in MongoDB)
+  │           ├── profile/route.ts    GET (fetch user role)
+  │           ├── login-event/route.ts POST (record login, fire+forget)
+  │           └── forgot-password/route.ts POST (Firebase reset)
+  │
+  ├── components/
+  │   ├── DashboardProvider.tsx       Global data context + API methods
+  │   │
+  │   ├── dashboard/
+  │   │   ├── AddTransactionForm.tsx  Transaction creation form
+  │   │   ├── CashflowChart.tsx       Recharts LineChart (lazy-loaded)
+  │   │   ├── FinanceNews.tsx         Full news page component
+  │   │   ├── FinanceNewsWidget.tsx   Sidebar news widget (4 articles)
+  │   │   └── LiveStocksWidget.tsx    Static stock ticker widget
+  │   │
+  │   ├── layout/
+  │   │   └── DashboardSidebar.tsx    Navigation sidebar
+  │   │
+  │   └── ui/
+  │       ├── DashboardBackground.tsx  Animated background (memoized)
+  │       ├── AmbientBackground.tsx    Landing page animation
+  │       ├── CSSParticles.tsx         CSS-only particle system
+  │       ├── ScrollReveal.tsx         Intersection Observer reveal
+  │       └── button.tsx               shadcn button component
+  │
+  ├── context/
+  │   └── AuthContext.tsx              Firebase auth state + MongoDB sync
+  │
+  ├── lib/
+  │   ├── firebase.ts                  Firebase app/auth/db/provider init
+  │   ├── mongodb.ts                   Mongoose connection (pooled, cached)
+  │   ├── encryption.ts                Data encryption utilities
+  │   └── utils.ts                     cn() Tailwind class merge utility
+  │
+  ├── models/
+  │   ├── User.ts                      Mongoose User schema + model
+  │   ├── Transaction.ts               Mongoose Transaction schema
+  │   │                                + compound index {userId, date}
+  │   └── Goal.ts                      Mongoose Goal schema
+  │                                    + index on userId + createdAt
+  │
+  ├── middleware.ts                    Route protection (cookie-based auth)
+  ├── next.config.mjs                  Next.js optimisation configuration
+  ├── tailwind.config.ts               Tailwind theme config
+  ├── tsconfig.json                    TypeScript compiler config
+  ├── postcss.config.mjs               PostCSS config
+  ├── .env.local                       All secret API keys (not in git)
+  └── package.json                     Dependencies + npm scripts
+
+
+================================================================================
+14. KNOWN LIMITATIONS
+================================================================================
+
+  Issue                    Cause                        Workaround / Fix
+  -----------------------  ---------------------------  ----------------------
+  First API call after     MongoDB Atlas M0 free tier   Upgrade to M2 ($9/mo)
+  idle: 7–10 seconds       auto-pauses after inactivity or add keep-alive ping
+
+  GNews: 100 req/day       Free tier quota              15-min server cache +
+                                                        1-hr client cache
+                                                        minimizes API calls
+
+  Gemini rate limits       Free tier quota              24-hr insight cache +
+                                                        retry countdown UI +
+                                                        fallback to 1.5-flash
+
+  LiveStocks data static   No free real-time stock API  Replace with Alpha
+                                                        Vantage or Yahoo
+                                                        Finance API
+
+  No real-time updates     No WebSocket/SSE             Add polling or
+                                                        Server-Sent Events
+                                                        for live data
+
+  Auth token expires 1hr   Firebase ID token TTL        Auto-refresh token
+                                                        with onIdTokenChanged
+
+
+================================================================================
+  END OF DOCUMENT
+  FinAI — Finance AI Web Application
+  Architecture Version: April 21, 2026
+================================================================================

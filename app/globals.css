@@ -1,0 +1,169 @@
+@import "tw-animate-css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* ---------- Theme Token Definitions ---------- */
+:root {
+  /* LIGHT THEME (Veridian Ledger Scheme) */
+  --background: #effcf9;
+  --foreground: #121e1c;
+  --surface: #effcf9;
+  --surface-container-low: #e9f6f3;
+  --surface-container-lowest: #ffffff;
+  --surface-container: #d8e5e2;
+  --surface-variant: #d8e5e2;
+  --on-surface: #121e1c;
+  --on-surface-variant: #3c4a42;
+
+  --primary: #006c49;
+  --primary-container: #10b981;
+  --on-primary: #ffffff;
+
+  --tertiary: #ba1a1a;
+  /* for debt/liabilities */
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+  --outline: #bbcabf;
+
+  --shadow-color: rgba(6, 78, 59, 0.08);
+  /* Greenish dark shadow */
+}
+
+.dark {
+  /* DARK THEME (Quantexa Modern Scheme) */
+  --background: #05050F;
+  --foreground: #ffffff;
+  --surface: #05050F;
+  --surface-container-low: #0D0D1A;
+  --surface-container-lowest: #0b0b14;
+  --surface-container: #1e1b4b;
+  --surface-variant: #1e1b4b;
+  --on-surface: #ffffff;
+  --on-surface-variant: #a1a1aa;
+  /* zinc-400 */
+
+  --primary: #7C3AED;
+  /* qx-violet */
+  --primary-container: #9F67FF;
+  /* qx-violet-lt */
+  --on-primary: #ffffff;
+
+  --tertiary: #ff4d4f;
+  /* soft red for dark mode liabilities */
+  --error: #ef4444;
+  --error-container: #450a0a;
+  --outline: rgba(124, 58, 237, 0.2);
+  /* faint violet border */
+
+  --shadow-color: rgba(124, 58, 237, 0.15);
+  /* Purple shadow */
+}
+
+/* ---------- Base ---------- */
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    @apply antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+/* ---------- Utility Classes ---------- */
+@layer utilities {
+  .ghost-border {
+    border: 1px solid var(--outline);
+    transition: border-color 0.3s ease;
+  }
+
+  .ambient-shadow {
+    box-shadow: 0 20px 40px -10px var(--shadow-color);
+  }
+
+  .glass-panel {
+    background: var(--surface-container-lowest);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--outline);
+  }
+}
+
+/* ---------- Hero Card Image Blend Mode ---------- */
+/* Light mode: multiply blends the pastel 3D image naturally into the white card */
+.hero-image-blend {
+  mix-blend-mode: multiply;
+  opacity: 0.9;
+}
+
+/* Dark mode: switch to normal so the image is fully visible; add brightness/contrast
+   via filter so the pastel orb pops against the deep dark background */
+.dark .hero-image-blend {
+  mix-blend-mode: normal;
+  opacity: 1;
+  filter: brightness(1.15) contrast(1.1) saturate(1.2);
+}
+
+/* ---------- Marquee (Trusted By strip) ---------- */
+.marquee-track {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: max-content;          /* shrink-wrap all items so flex doesn't wrap */
+  animation: marquee 32s linear infinite;
+  will-change: transform;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused; /* pause on hover for readability */
+}
+
+/* ---------- Keyframe Animations ---------- */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes floatNode {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  70%,
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
