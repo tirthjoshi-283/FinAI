@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FinAI widget: rounded violet -> deep indigo card, matching the app's dark theme. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <corners android:radius="24dp" />
+    <gradient
+        android:angle="315"
+        android:startColor="#FF6D28D9"
+        android:centerColor="#FF3B1E8A"
+        android:endColor="#FF0E7490" />
+</shape>

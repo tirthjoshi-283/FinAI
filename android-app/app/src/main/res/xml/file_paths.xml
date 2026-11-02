@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Camera captures of bills, uploaded for scanning and left in the app cache. -->
+    <cache-path name="bills" path="bills/" />
+    <!-- Wrapped story cards shared via the system share sheet. -->
+    <cache-path name="shared" path="shared/" />
+</paths>

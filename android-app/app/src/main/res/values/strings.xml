@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">FinAI</string>
+    <string name="widget_description">Today\'s spending, budget left and your latest transaction</string>
+</resources>
