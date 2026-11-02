@@ -104,8 +104,10 @@ const STATS = [
   { value: "$2.4B+",  label: "Assets Managed" },
   { value: "99.98%", label: "Uptime SLA" },
   { value: "180ms",  label: "Avg. Execution" },
-  { value: "40K+",   label: "Active Investors" },
 ];
+
+/** How often the landing page re-reads the live user count while it is open. */
+const USER_COUNT_REFRESH_MS = 60_000;
 
 /* ============================================================
    SUB-COMPONENTS
@@ -198,6 +200,30 @@ export default function Home() {
   const [navScrolled, setNavScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
+  const [userCount, setUserCount] = useState<number | null>(null);
+
+  // Real registered-user count from MongoDB, refreshed so new sign-ups show up.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch("/api/stats", { cache: "no-store" });
+        if (!res.ok) return;
+        const data: { users?: number } = await res.json();
+        if (!cancelled && typeof data.users === "number") setUserCount(data.users);
+      } catch {
+        // Keep the last known value; the next tick retries.
+      }
+    };
+    load();
+    const id = setInterval(load, USER_COUNT_REFRESH_MS);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
+  const stats = [
+    ...STATS,
+    { value: userCount === null ? "—" : userCount.toLocaleString("en-IN"), label: "Registered Users" },
+  ];
 
   // Detect scroll for nav style
   useEffect(() => {
@@ -376,7 +402,7 @@ export default function Home() {
           className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl w-full"
           style={{ animation: "fadeSlideUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.7s both" }}
         >
-          {STATS.map((s, i) => (
+          {stats.map((s, i) => (
             <div key={i} className="text-center">
               <div
                 className="text-3xl font-bold mb-1 gradient-text"
